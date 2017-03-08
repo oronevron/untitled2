@@ -1,147 +1,120 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import numpy as np
 import tensorflow as tf
+import numpy as np
+import cv2
+import math
+import os.path
+import random
 
-from tensorflow.contrib import learn
-from tensorflow.contrib.learn.python.learn.estimators import model_fn as model_fn_lib
+from tensorflow.examples.tutorials.mnist import input_data
+import matplotlib.pyplot as plt
 
-tf.logging.set_verbosity(tf.logging.INFO)
+from globalFunctions import load_from_file
+from globalFunctions import weight_variable
+from globalFunctions import bias_variable
+from globalFunctions import conv2d
+from globalFunctions import max_pool_2x2
+from globalFunctions import Shuffle
 
+# In this CNN we have:
+# first conv layer with 32 filters
+# second conv layer with 64 filters
+# dense layer with 1024 neurons
+# keep prob of 0.4
 
-def cnn_model_fn(features, labels, mode):
-  """Model function for CNN."""
-  # Input Layer
-  # Reshape X to 4-D tensor: [batch_size, width, height, channels]
-  # MNIST images are 28x28 pixels, and have one color channel
-  input_layer = tf.reshape(features, [-1, 28, 28, 1])
+# results are not good enough and it takes a lot of time to run
+# 75% accuracy
 
-  # Convolutional Layer #1
-  # Computes 32 features using a 5x5 filter with ReLU activation.
-  # Padding is added to preserve width and height.
-  # Input Tensor Shape: [batch_size, 28, 28, 1]
-  # Output Tensor Shape: [batch_size, 28, 28, 32]
-  conv1 = tf.layers.conv2d(
-      inputs=input_layer,
-      filters=32,
-      kernel_size=[5, 5],
-      padding="same",
-      activation=tf.nn.relu)
+# Load the train/validation/test data and labels
+train_image,train_labal,validation_image,validation_labal,test_image,test_labal = load_from_file()
 
-  # Pooling Layer #1
-  # First max pooling layer with a 2x2 filter and stride of 2
-  # Input Tensor Shape: [batch_size, 28, 28, 32]
-  # Output Tensor Shape: [batch_size, 14, 14, 32]
-  pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
+# We start by creating placeholders for the data and the labels
+n_input = 1600
+n_output = 50
 
-  # Convolutional Layer #2
-  # Computes 64 features using a 5x5 filter.
-  # Padding is added to preserve width and height.
-  # Input Tensor Shape: [batch_size, 14, 14, 32]
-  # Output Tensor Shape: [batch_size, 14, 14, 64]
-  conv2 = tf.layers.conv2d(
-      inputs=pool1,
-      filters=64,
-      kernel_size=[5, 5],
-      padding="same",
-      activation=tf.nn.relu)
+x = tf.placeholder(tf.float32, [None, n_input])
+y = tf.placeholder(tf.float32, [None, n_output])
 
-  # Pooling Layer #2
-  # Second max pooling layer with a 2x2 filter and stride of 2
-  # Input Tensor Shape: [batch_size, 14, 14, 64]
-  # Output Tensor Shape: [batch_size, 7, 7, 64]
-  pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
+# define the input layer
+x_tensor = tf.reshape(x, [-1, 40, 40, 1])
 
-  # Flatten tensor into a batch of vectors
-  # Input Tensor Shape: [batch_size, 7, 7, 64]
-  # Output Tensor Shape: [batch_size, 7 * 7 * 64]
-  pool2_flat = tf.reshape(pool2, [-1, 7 * 7 * 64])
+# Weight matrix is [height x width x input_channels x output_channels]
+# Bias is [output_channels]
+filter_size = 5
+n_filters_1 = 32
+n_filters_2 = 64
 
-  # Dense Layer
-  # Densely connected layer with 1024 neurons
-  # Input Tensor Shape: [batch_size, 7 * 7 * 64]
-  # Output Tensor Shape: [batch_size, 1024]
-  dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu)
+# parameters
+W_conv1 = weight_variable([filter_size, filter_size, 1, n_filters_1])
+b_conv1 = bias_variable([n_filters_1])
+W_conv2 = weight_variable([filter_size, filter_size, n_filters_1, n_filters_2])
+b_conv2 = bias_variable([n_filters_2])
 
-  # Add dropout operation; 0.6 probability that element will be kept
-  dropout = tf.layers.dropout(
-      inputs=dense, rate=0.4, training=mode == learn.ModeKeys.TRAIN)
+# layers
+h_conv1 = tf.nn.relu(conv2d(x_tensor, W_conv1) + b_conv1)
+h_pool1 = max_pool_2x2(h_conv1)
 
-  # Logits layer
-  # Input Tensor Shape: [batch_size, 1024]
-  # Output Tensor Shape: [batch_size, 10]
-  logits = tf.layers.dense(inputs=dropout, units=10)
-
-  loss = None
-  train_op = None
-
-  # Calculate Loss (for both TRAIN and EVAL modes)
-  if mode != learn.ModeKeys.INFER:
-    onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=10)
-    loss = tf.losses.softmax_cross_entropy(
-        onehot_labels=onehot_labels, logits=logits)
-
-  # Configure the Training Op (for TRAIN mode)
-  if mode == learn.ModeKeys.TRAIN:
-    train_op = tf.contrib.layers.optimize_loss(
-        loss=loss,
-        global_step=tf.contrib.framework.get_global_step(),
-        learning_rate=0.001,
-        optimizer="SGD")
-
-  # Generate Predictions
-  predictions = {
-      "classes": tf.argmax(
-          input=logits, axis=1),
-      "probabilities": tf.nn.softmax(
-          logits, name="softmax_tensor")
-  }
-
-  # Return a ModelFnOps object
-  return model_fn_lib.ModelFnOps(
-      mode=mode, predictions=predictions, loss=loss, train_op=train_op)
+h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
+h_pool2 = max_pool_2x2(h_conv2)
 
 
-def main(unused_argv):
-  # Load training and eval data
-  mnist = learn.datasets.load_dataset("mnist")
-  train_data = mnist.train.images  # Returns np.array
-  train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
-  eval_data = mnist.test.images  # Returns np.array
-  eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
-
-  # Create the Estimator
-  mnist_classifier = learn.Estimator(
-      model_fn=cnn_model_fn, model_dir="/tmp/mnist_convnet_model")
-
-  # Set up logging for predictions
-  # Log the values in the "Softmax" tensor with label "probabilities"
-  tensors_to_log = {"probabilities": "softmax_tensor"}
-  logging_hook = tf.train.LoggingTensorHook(
-      tensors=tensors_to_log, every_n_iter=50)
-
-  # Train the model
-  mnist_classifier.fit(
-      x=train_data,
-      y=train_labels,
-      batch_size=100,
-      steps=20000,
-      monitors=[logging_hook])
-
-  # Configure the accuracy metric for evaluation
-  metrics = {
-      "accuracy":
-          learn.metric_spec.MetricSpec(
-              metric_fn=tf.metrics.accuracy, prediction_key="classes"),
-  }
-
-  # Evaluate the model and print results
-  eval_results = mnist_classifier.evaluate(
-      x=eval_data, y=eval_labels, metrics=metrics)
-  print(eval_results)
+# 10x10 is the size of the image after the convolutional and pooling layers (40x40 -> 20x20 -> 10x10)
+h_conv2_flat = tf.reshape(h_pool2, [-1, 10 * 10 * n_filters_2])
 
 
-if __name__ == "__main__":
-  tf.app.run()
+# %% Create the one fully-connected layer:
+n_fc = 1024
+W_fc1 = weight_variable([10 * 10 * n_filters_2, n_fc])
+b_fc1 = bias_variable([n_fc])
+h_fc1 = tf.nn.relu(tf.matmul(h_conv2_flat, W_fc1) + b_fc1)
+
+keep_prob = tf.placeholder(tf.float32)
+h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
+
+W_fc2 = weight_variable([n_fc, n_output])
+b_fc2 = bias_variable([n_output])
+y_pred = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
+
+cross_entropy = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(y_pred, y))
+optimizer = tf.train.AdamOptimizer().minimize(cross_entropy)
+
+correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.argmax(y, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
+
+# variables:
+sess = tf.Session()
+sess.run(tf.initialize_all_variables())
+
+# We'll train in minibatches and report accuracy:
+batch_size = 50
+n_epochs = 10
+l_loss = list()
+for epoch_i in range(n_epochs):
+    for batch_i in range(0, len(train_image), batch_size):
+        #print('epoch {} barch: {}'.format(epoch_i + 1, batch_i))
+
+        # Calc end of next batch
+        end = batch_i+batch_size
+        if end > len(train_image):
+            end = len(train_image)
+        batch_xs = train_image[batch_i:end]
+        batch_ys = train_labal[batch_i:end]
+        sess.run(optimizer, feed_dict={
+            x: batch_xs, y: batch_ys, keep_prob: 0.4})
+
+    loss = sess.run(accuracy, feed_dict={
+                       x: validation_image,
+                       y: validation_labal,
+                       keep_prob: 1.0 })
+    print('Validation accuracy for epoch {} is: {}'.format(epoch_i + 1, loss))
+    l_loss.append(loss)
+
+    # Shuffle data.
+    train_image, train_labal = Shuffle(train_image, train_labal)
+
+print("Accuracy for test set: {}".format(sess.run(accuracy,
+               feed_dict={
+                   x: test_image,
+                   y: test_labal,
+                   keep_prob: 1.0
+               })))
+
