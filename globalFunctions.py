@@ -6,19 +6,19 @@ import os.path
 import random
 from os import listdir
 from sklearn.metrics import confusion_matrix
-import seaborn as sn
-import pandas as pd
+#import seaborn as sn
+#import pandas as pd
 
 from tensorflow.examples.tutorials.mnist import input_data
 import matplotlib.pyplot as plt
 
 def load_image(image_type, load_type, size, with_rot):
     train_image = []
-    train_labal = []
+    train_label = []
     validation_image = []
-    validation_labal = []
+    validation_label = []
     test_image = []
-    test_labal = []
+    test_label = []
 
     dir_list = listdir('FinalDataset/jpg')
 
@@ -26,11 +26,11 @@ def load_image(image_type, load_type, size, with_rot):
     for i in range(0,len(dir_list)):
 
         image_list = []
-        labal_hot = []
+        label_hot = []
 
-        # Init lavel one hot vector
-        labal = np.zeros(51)
-        labal[int(dir_list[i])] = 1
+        # Init label one hot vector
+        label = np.zeros(51)
+        label[int(dir_list[i])] = 1
 
         dir_images_list = listdir('FinalDataset/jpg/' + dir_list[i])
 
@@ -48,7 +48,7 @@ def load_image(image_type, load_type, size, with_rot):
                 resized_image = resized_image / 255.
 
                 image_list.append(resized_image)
-                labal_hot.append(labal)
+                label_hot.append(label)
         else:
             for j in range(0, len(dir_images_list)):
                 dir_images_list[j] = 'FinalDataset/jpg/' + str(dir_list[i]) + '/' + dir_images_list[j]
@@ -66,7 +66,7 @@ def load_image(image_type, load_type, size, with_rot):
             my_img = tf.image.decode_jpeg(value, channels=channels)  # use png or jpg decoder based on your files.
             my_img_re = tf.image.resize_images(my_img, [size, size])
 
-            # Rotate iamge 180 degree
+            # Rotate image by 180 degree
             my_img_re2 = tf.image.rot90(my_img_re, 2, name=None)
 
             init_op = tf.initialize_all_variables()
@@ -89,14 +89,14 @@ def load_image(image_type, load_type, size, with_rot):
                     resized_image = resized_image / 255.
 
                     image_list.append(resized_image)
-                    labal_hot.append(labal)
+                    label_hot.append(label)
 
                     if with_rot == True:
                         image = my_img_re2.eval()
                         resized_image = np.asarray(image)
                         resized_image = resized_image / 255.
                         image_list.append(resized_image)
-                        labal_hot.append(labal)
+                        label_hot.append(label)
 
                 coord.request_stop()
                 coord.join(threads)
@@ -111,63 +111,63 @@ def load_image(image_type, load_type, size, with_rot):
 
         # Split current label image to train-validation-test
         train_image.extend(image_list[:test_image_size])
-        train_labal.extend(labal_hot[:test_image_size])
+        train_label.extend(label_hot[:test_image_size])
         validation_image.extend(image_list[test_image_size:validation_image_size])
-        validation_labal.extend(labal_hot[test_image_size:validation_image_size])
+        validation_label.extend(label_hot[test_image_size:validation_image_size])
         test_image.extend(image_list[validation_image_size:])
-        test_labal.extend(labal_hot[validation_image_size:])
+        test_label.extend(label_hot[validation_image_size:])
 
     # list to numpy array.
     train_image = np.array(train_image)
-    train_labal = np.array(train_labal)
+    train_label = np.array(train_label)
     validation_image = np.array(validation_image)
-    validation_labal = np.array(validation_labal)
+    validation_label = np.array(validation_label)
     test_image = np.array(test_image)
-    test_labal = np.array(test_labal)
+    test_label = np.array(test_label)
 
     # Shuffle data.
-    train_image, train_labal = Shuffle(train_image, train_labal)
-    validation_image, validation_labal = Shuffle(validation_image, validation_labal)
-    test_image, test_labal = Shuffle(test_image, test_labal)
+    train_image, train_label = Shuffle(train_image, train_label)
+    validation_image, validation_label = Shuffle(validation_image, validation_label)
+    test_image, test_label = Shuffle(test_image, test_label)
 
     # Save image.
-    save_to_file(train_image,train_labal,validation_image,validation_labal,test_image,test_labal)
+    save_to_file(train_image,train_label,validation_image,validation_label,test_image,test_label)
 
-    return train_image,train_labal,validation_image,validation_labal,test_image,test_labal
+    return train_image,train_label,validation_image,validation_label,test_image,test_label
 
 # Load image from binary file.
 def load_from_file(image_type, load_type, size, with_rot,force_load=False):
 
     if force_load == False and os.path.exists('FinalDataset/bin/train_image.npy') is True:
         train_image = np.load('FinalDataset/bin/train_image.npy')
-        train_labal = np.load('FinalDataset/bin/train_labal.npy')
+        train_label = np.load('FinalDataset/bin/train_label.npy')
         validation_image = np.load('FinalDataset/bin/validation_image.npy')
-        validation_labal = np.load('FinalDataset/bin/validation_labal.npy')
+        validation_label = np.load('FinalDataset/bin/validation_label.npy')
         test_image = np.load('FinalDataset/bin/test_image.npy')
-        test_labal = np.load('FinalDataset/bin/test_labal.npy')
+        test_label = np.load('FinalDataset/bin/test_label.npy')
     else:
-        train_image, train_labal, validation_image, validation_labal, test_image, test_labal \
+        train_image, train_label, validation_image, validation_label, test_image, test_label \
             = load_image(image_type, load_type, size, with_rot)
 
     # Return data.
-    return train_image, train_labal, validation_image, validation_labal, test_image, test_labal
+    return train_image, train_label, validation_image, validation_label, test_image, test_label
 # def load_image():
 #     train_image = []
-#     train_labal = []
+#     train_label = []
 #     validation_image = []
-#     validation_labal = []
+#     validation_label = []
 #     test_image = []
-#     test_labal = []
+#     test_label = []
 #
 #     # For every label
 #     for i in range(0,50):
 #
 #         image_list = []
-#         labal_hot = []
+#         label_hot = []
 #
 #         # Init lavel one hot vector
-#         labal = np.zeros(50)
-#         labal[i] = 1
+#         label = np.zeros(50)
+#         label[i] = 1
 #
 #         # For every image
 #         for j in range(0,1000):
@@ -182,7 +182,7 @@ def load_from_file(image_type, load_type, size, with_rot,force_load=False):
 #             resized_image = resized_image / 255.
 #
 #             image_list.append(resized_image)
-#             labal_hot.append(labal)
+#             label_hot.append(label)
 #
 #         # Shuffle data.
 #         random.shuffle(image_list)
@@ -194,54 +194,54 @@ def load_from_file(image_type, load_type, size, with_rot,force_load=False):
 #
 #         # Split current label image to train-validation-test
 #         train_image.extend(image_list[:test_image_size])
-#         train_labal.extend(labal_hot[:test_image_size])
+#         train_label.extend(label_hot[:test_image_size])
 #         validation_image.extend(image_list[test_image_size:validation_image_size])
-#         validation_labal.extend(labal_hot[test_image_size:validation_image_size])
+#         validation_label.extend(label_hot[test_image_size:validation_image_size])
 #         test_image.extend(image_list[validation_image_size:])
-#         test_labal.extend(labal_hot[validation_image_size:])
+#         test_label.extend(label_hot[validation_image_size:])
 #
 #     # list to numpy array.
 #     train_image = np.array(train_image)
-#     train_labal = np.array(train_labal)
+#     train_label = np.array(train_label)
 #     validation_image = np.array(validation_image)
-#     validation_labal = np.array(validation_labal)
+#     validation_label = np.array(validation_label)
 #     test_image = np.array(test_image)
-#     test_labal = np.array(test_labal)
+#     test_label = np.array(test_label)
 #
 #     # Shuffle data.
-#     train_image, train_labal = Shuffle(train_image, train_labal)
-#     validation_image, validation_labal = Shuffle(validation_image, validation_labal)
-#     test_image, test_labal = Shuffle(test_image, test_labal)
+#     train_image, train_label = Shuffle(train_image, train_label)
+#     validation_image, validation_label = Shuffle(validation_image, validation_label)
+#     test_image, test_label = Shuffle(test_image, test_label)
 #
 #     # Save image.
-#     save_to_file(train_image,train_labal,validation_image,validation_labal,test_image,test_labal)
+#     save_to_file(train_image,train_label,validation_image,validation_label,test_image,test_label)
 #
-#     return train_image,train_labal,validation_image,validation_labal,test_image,test_labal
+#     return train_image,train_label,validation_image,validation_label,test_image,test_label
 #
 # # Load image from binary file.
 # def load_from_file():
 #
 #     if os.path.exists('FinalDataset/bin/train_image.npy') is True:
 #         train_image = np.load('FinalDataset/bin/train_image.npy')
-#         train_labal = np.load('FinalDataset/bin/train_labal.npy')
+#         train_label = np.load('FinalDataset/bin/train_label.npy')
 #         validation_image = np.load('FinalDataset/bin/validation_image.npy')
-#         validation_labal = np.load('FinalDataset/bin/validation_labal.npy')
+#         validation_label = np.load('FinalDataset/bin/validation_label.npy')
 #         test_image = np.load('FinalDataset/bin/test_image.npy')
-#         test_labal = np.load('FinalDataset/bin/test_labal.npy')
+#         test_label = np.load('FinalDataset/bin/test_label.npy')
 #     else:
-#         train_image, train_labal, validation_image, validation_labal, test_image, test_labal = load_image()
+#         train_image, train_label, validation_image, validation_label, test_image, test_label = load_image()
 #
 #     # Return data.
-#     return train_image, train_labal, validation_image, validation_labal, test_image, test_labal
+#     return train_image, train_label, validation_image, validation_label, test_image, test_label
 
 # Save image to binary file.
-def save_to_file(train_image, train_labal, validation_image, validation_labal, test_image, test_labal):
+def save_to_file(train_image, train_label, validation_image, validation_label, test_image, test_label):
       np.save('FinalDataset/bin/train_image.npy',train_image)
-      np.save('FinalDataset/bin/train_labal.npy',train_labal)
+      np.save('FinalDataset/bin/train_label.npy',train_label)
       np.save('FinalDataset/bin/validation_image.npy',validation_image)
-      np.save('FinalDataset/bin/validation_labal.npy', validation_labal)
+      np.save('FinalDataset/bin/validation_label.npy', validation_label)
       np.save('FinalDataset/bin/test_image.npy',test_image)
-      np.save('FinalDataset/bin/test_labal.npy',test_labal)
+      np.save('FinalDataset/bin/test_label.npy',test_label)
 
 def Shuffle(Image, Label):
     perm = np.arange(len(Image))
