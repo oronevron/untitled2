@@ -16,7 +16,6 @@ import globalFunctions
 # 5 epochs
 # keep prob of 0.4
 
-
 # Load the train/validation/test data and labels
 train_image,train_label,validation_image,validation_label,test_image,test_label = globalFunctions.load_from_file(0, 'TF', 40, True, force_load=False)
 
@@ -108,7 +107,7 @@ for epoch_i in range(n_epochs):
     labels = prediction.eval(feed_dict={x: validation_image, y: validation_label, keep_prob: 1.0}, session=sess)
 
    # confusion_matrix1(one_hot_to_label_array(validation_labal), predictions[0])
-    globalFunctions.confusion_matrix1(globalFunctions.one_hot_to_label_array(validation_label), labels)
+    globalFunctions.confusion_matrix1(globalFunctions.one_hot_to_label_array(validation_label), labels, "validation" + str(epoch_i + 1))
 
 print("Accuracy for test set: {}".format(sess.run(accuracy,
                feed_dict={

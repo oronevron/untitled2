@@ -11,6 +11,8 @@ from sklearn.metrics import confusion_matrix
 
 from tensorflow.examples.tutorials.mnist import input_data
 import matplotlib.pyplot as plt
+import seaborn as sn
+import pandas as pd
 
 def load_image(image_type, load_type, size, with_rot):
     train_image = []
@@ -274,14 +276,14 @@ def one_hot_to_label_array(one_hot):
 
     return label
 
-def confusion_matrix1(actual, prediction):
+def confusion_matrix1(actual, prediction, file_name):
     cm = confusion_matrix(actual,prediction)
-
-    # df_cm = pd.DataFrame(cm, range(50),
-    #                      range(50))
-    # plt.figure(figsize = (50,40))
-    # sn.set(font_scale=1.4)  # for label size
-    # sn.heatmap(df_cm, annot=True, annot_kws={"size": 14})  # font size
+    df_cm = pd.DataFrame(cm, range(50), range(50))
+    sn.set(font_scale=0.90)  # for label size
+    fig, ax = plt.subplots(figsize=(17, 12))  # Sample figsize in inches
+    cm_plot = sn.heatmap(df_cm, annot=True, annot_kws={"size": 12}, linewidths=.5, ax=ax)  # font size
+    fig = cm_plot.get_figure()
+    fig.savefig('cm/' + str(file_name) + '.png')
 
 def Restore_and_run_test(model_name):
     a = 1
