@@ -68,8 +68,39 @@ def load_image(image_type, load_type, size, with_rot):
             my_img = tf.image.decode_jpeg(value, channels=channels)  # use png or jpg decoder based on your files.
             my_img_re = tf.image.resize_images(my_img, [size, size])
 
-            # Rotate image by 180 degree
-            my_img_re2 = tf.image.rot90(my_img_re, 2, name=None)
+
+            # ROTATIONAL MANIPULATIONS #
+
+            # # Rotate image left by 90 degrees
+            # my_img_rot_1 = tf.image.rot90(my_img_re, 1, name=None)
+            #
+            # # Rotate image left by 180 degrees
+            # my_img_rot_2 = tf.image.rot90(my_img_re, 2, name=None)
+            #
+            # # Rotate image left by 270 degrees
+            # my_img_rot_3 = tf.image.rot90(my_img_re, 3, name=None)
+            #
+            # # flip image upside down
+            # my_img_flip_vertically = tf.image.flip_up_down(my_img_re)
+            #
+            # # flip image left right
+            # my_img_flip_horizontally = tf.image.flip_left_right(my_img_re)
+
+
+
+            # COLOR MANIPULATION #
+
+            # image with random brightness
+            my_img_rnd_brightness = tf.image.random_brightness(my_img_re, 1.0, seed=None)
+
+            # image with random contrast
+            my_img_rnd_contrast = tf.image.random_contrast(my_img_re, 0.1, 5.0, seed=None)
+
+            # # image with random hue
+            # my_img_rnd_hue = tf.image.random_hue(my_img_re, 0.5, seed=None)
+            #
+            # # image with random saturation
+            # my_img_rnd_saturation = tf.image.random_saturation(my_img_re, 0.1, 5.0, seed=None)
 
             init_op = tf.initialize_all_variables()
 
@@ -93,12 +124,76 @@ def load_image(image_type, load_type, size, with_rot):
                     image_list.append(resized_image)
                     label_hot.append(label)
 
+                    # if we want rotations
                     if with_rot == True:
-                        image = my_img_re2.eval()
+
+                        # if m % 5 == 0:
+
+                            # image = my_img_rot_1.eval()
+                            # resized_image = np.asarray(image)
+                            # resized_image = resized_image / 255.
+                            # image_list.append(resized_image)
+                            # label_hot.append(label)
+
+                        # elif m % 5 == 1:
+                        #
+                        #     image = my_img_rot_2.eval()
+                        #     resized_image = np.asarray(image)
+                        #     resized_image = resized_image / 255.
+                        #     image_list.append(resized_image)
+                        #     label_hot.append(label)
+                        #
+                        # elif m % 5 == 2:
+                        #
+                        #     image = my_img_rot_3.eval()
+                        #     resized_image = np.asarray(image)
+                        #     resized_image = resized_image / 255.
+                        #     image_list.append(resized_image)
+                        #     label_hot.append(label)
+
+                        # if m % 2 == 0:
+
+                            # image = my_img_flip_vertically.eval()
+                            # resized_image = np.asarray(image)
+                            # resized_image = resized_image / 255.
+                            # image_list.append(resized_image)
+                            # label_hot.append(label)
+
+                        # elif m % 2 == 1:
+
+                            # image = my_img_flip_horizontally.eval()
+                            # resized_image = np.asarray(image)
+                            # resized_image = resized_image / 255.
+                            # image_list.append(resized_image)
+                            # label_hot.append(label)
+
+                        # random brightness
+                        image = my_img_rnd_brightness.eval()
                         resized_image = np.asarray(image)
                         resized_image = resized_image / 255.
                         image_list.append(resized_image)
                         label_hot.append(label)
+
+                        # random contrast
+                        image = my_img_rnd_contrast.eval()
+                        resized_image = np.asarray(image)
+                        resized_image = resized_image / 255.
+                        image_list.append(resized_image)
+                        label_hot.append(label)
+
+                        # random hue
+                        # image = my_img_rnd_hue.eval()
+                        # resized_image = np.asarray(image)
+                        # resized_image = resized_image / 255.
+                        # image_list.append(resized_image)
+                        # label_hot.append(label)
+
+                        # # random saturation
+                        # image = my_img_rnd_saturation.eval()
+                        # resized_image = np.asarray(image)
+                        # resized_image = resized_image / 255.
+                        # image_list.append(resized_image)
+                        # label_hot.append(label)
 
                 coord.request_stop()
                 coord.join(threads)
