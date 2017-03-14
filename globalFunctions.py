@@ -163,14 +163,14 @@ def load_image(image_type, load_type, size, with_rot):
 
                         # elif m % 2 == 1:
 
-                        # random brightness
+                        # the first random brightness
                         image = my_img_rnd_brightness.eval()
                         resized_image = np.asarray(image)
                         resized_image = resized_image / 255.
                         image_list.append(resized_image)
                         label_hot.append(label)
 
-                        # second random brightness
+                        # the second random brightness
                         image = my_img_rnd_brightness_2.eval()
                         resized_image = np.asarray(image)
                         resized_image = resized_image / 255.
