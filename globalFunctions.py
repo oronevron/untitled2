@@ -167,15 +167,15 @@ def load_image(image_type, load_type, size, with_rot):
                         image = my_img_rnd_brightness.eval()
                         resized_image = np.asarray(image)
                         resized_image = resized_image / 255.
-                        image_list.append(resized_image)
-                        label_hot.append(label)
+                        train_image.append(resized_image)
+                        train_label.append(label)
 
                         # the second random brightness
                         image = my_img_rnd_brightness_2.eval()
                         resized_image = np.asarray(image)
                         resized_image = resized_image / 255.
-                        image_list.append(resized_image)
-                        label_hot.append(label)
+                        train_image.append(resized_image)
+                        train_label.append(label)
 
                         # # random contrast
                         # image = my_img_rnd_contrast.eval()
@@ -234,6 +234,61 @@ def load_image(image_type, load_type, size, with_rot):
     save_to_file(train_image,train_label,validation_image,validation_label,test_image,test_label)
 
     return train_image,train_label,validation_image,validation_label,test_image,test_label
+
+def load_new_test_image():
+
+    test_new_image = []
+    test_new_label = []
+
+    dir_images_list = listdir('FinalDataset/test_jpg')
+
+    # For every label
+    for i in range(0,len(dir_images_list)):
+        dir_images_list[i] = 'FinalDataset/test_jpg/' + dir_images_list[i]
+
+    # Init label one hot vector
+    label = np.zeros(51)
+    label[3] = 1
+
+    filename_queue = tf.train.string_input_producer(dir_images_list)  # list of files to read
+
+    reader = tf.WholeFileReader()
+    key, value = reader.read(filename_queue)
+
+    channels = 1
+
+    my_img = tf.image.decode_jpeg(value, channels=channels)  # use png or jpg decoder based on your files.
+    my_img_re = tf.image.resize_images(my_img, [40, 40])
+
+    init_op = tf.initialize_all_variables()
+
+    with tf.Session() as sess:
+        sess.run(init_op)
+
+        # Start populating the filename queue.
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(coord=coord)
+
+        for m in range(0, len(dir_images_list)):  # length of your filename list
+            image = my_img_re.eval()  # here is your image Tensor :)
+            resized_image = np.asarray(image)
+            resized_image = resized_image / 255.
+
+            test_new_image.append(resized_image)
+            test_new_label.append(label)
+
+        coord.request_stop()
+        coord.join(threads)
+
+    # list to numpy array.
+    test_new_image = np.array(test_new_image)
+    test_new_label = np.array(test_new_label)
+
+    # Save image.
+    # np.save('FinalDataset/bin/test_new_image.npy', test_new_image)
+    # np.save('FinalDataset/bin/test_new_label.npy', test_new_label)
+
+    return test_new_image,test_new_label
 
 # Load image from binary file.
 def load_from_file(image_type, load_type, size, with_rot,force_load=False):
