@@ -6,8 +6,8 @@ import os.path
 import random
 from os import listdir
 from sklearn.metrics import confusion_matrix
-#import seaborn as sn
-#import pandas as pd
+# import seaborn as sn
+# import pandas as pd
 
 from tensorflow.examples.tutorials.mnist import input_data
 import matplotlib.pyplot as plt
@@ -83,8 +83,8 @@ def load_image(image_type, load_type, size, with_rot):
             # # flip image upside down
             # my_img_flip_vertically = tf.image.flip_up_down(my_img_re)
             #
-            # # flip image left right
-            # my_img_flip_horizontally = tf.image.flip_left_right(my_img_re)
+            # flip image left right
+            my_img_flip_horizontally = tf.image.flip_left_right(my_img_re)
 
 
 
@@ -92,6 +92,8 @@ def load_image(image_type, load_type, size, with_rot):
 
             # image with random brightness
             my_img_rnd_brightness = tf.image.random_brightness(my_img_re, 1.0, seed=None)
+
+            my_img_rnd_brightness_2 = tf.image.random_brightness(my_img_re, 1.0, seed=None)
 
             # image with random contrast
             my_img_rnd_contrast = tf.image.random_contrast(my_img_re, 0.1, 5.0, seed=None)
@@ -161,25 +163,26 @@ def load_image(image_type, load_type, size, with_rot):
 
                         # elif m % 2 == 1:
 
-                            # image = my_img_flip_horizontally.eval()
-                            # resized_image = np.asarray(image)
-                            # resized_image = resized_image / 255.
-                            # image_list.append(resized_image)
-                            # label_hot.append(label)
-
-                        # random brightness
+                        # the first random brightness
                         image = my_img_rnd_brightness.eval()
                         resized_image = np.asarray(image)
                         resized_image = resized_image / 255.
                         image_list.append(resized_image)
                         label_hot.append(label)
 
-                        # random contrast
-                        image = my_img_rnd_contrast.eval()
+                        # the second random brightness
+                        image = my_img_rnd_brightness_2.eval()
                         resized_image = np.asarray(image)
                         resized_image = resized_image / 255.
                         image_list.append(resized_image)
                         label_hot.append(label)
+
+                        # # random contrast
+                        # image = my_img_rnd_contrast.eval()
+                        # resized_image = np.asarray(image)
+                        # resized_image = resized_image / 255.
+                        # image_list.append(resized_image)
+                        # label_hot.append(label)
 
                         # random hue
                         # image = my_img_rnd_hue.eval()
