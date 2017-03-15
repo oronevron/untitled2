@@ -42,7 +42,7 @@ def Image_split():
         # For every image
         for j in range(0, len(dir_images_list)):
             # Read image.
-            img = cv2.imread('FinalDataset/jpg/' + str(dir_list[i]) + '/' + str(dir_images_list[j]), 0)
+            img = cv2.imread('FinalDataset/jpg/' + str(dir_list[i]) + '/' + str(dir_images_list[j]), 1)
             if (img is None):
                 continue
 
@@ -57,6 +57,8 @@ def Image_split():
         # random.shuffle(image_list)
 
         # Calc size of each group(train-validation-test)
+        random.shuffle(image_list)
+
         image_number = len(image_list)
         test_image_size = int(math.ceil(image_number * 0.80))
         validation_image_size = int(math.ceil(image_number * 0.87))
@@ -78,7 +80,7 @@ def Image_split():
 def load_image_new(jpg_dir, bin_dir, image_type, load_type, size, with_rot, force_load=False):
 
     # Try load images from bin
-    if force_load == True:
+    if force_load == False:
         final_image, final_label = load_bin_new(bin_dir)
         if len(final_image) > 0:
             return final_image, final_label
@@ -135,8 +137,8 @@ def load_image_new(jpg_dir, bin_dir, image_type, load_type, size, with_rot, forc
             # # Rotate image left by 90 degrees
             # my_img_rot_1 = tf.image.rot90(my_img_re, 1, name=None)
             #
-            # # Rotate image left by 180 degrees
-            # my_img_rot_2 = tf.image.rot90(my_img_re, 2, name=None)
+            # Rotate image left by 180 degrees
+            my_img_rot_2 = tf.image.rot90(my_img_re, 2, name=None)
             #
             # # Rotate image left by 270 degrees
             # my_img_rot_3 = tf.image.rot90(my_img_re, 3, name=None)
@@ -154,7 +156,7 @@ def load_image_new(jpg_dir, bin_dir, image_type, load_type, size, with_rot, forc
             # image with random brightness
             my_img_rnd_brightness = tf.image.random_brightness(my_img_re, 1.0, seed=None)
 
-            my_img_rnd_brightness_2 = tf.image.random_brightness(my_img_re, 1.0, seed=None)
+            # my_img_rnd_brightness_2 = tf.image.random_brightness(my_img_re, 1.0, seed=None)
 
             # image with random contrast
             my_img_rnd_contrast = tf.image.random_contrast(my_img_re, 0.1, 5.0, seed=None)
@@ -232,32 +234,32 @@ def load_image_new(jpg_dir, bin_dir, image_type, load_type, size, with_rot, forc
                         label_hot.append(label)
 
                         # the second random brightness
-                        image = my_img_rnd_brightness_2.eval()
-                        resized_image = np.asarray(image)
-                        resized_image = resized_image / 255.
-                        image_list.append(resized_image)
-                        label_hot.append(label)
-
-                        # # random contrast
-                        # image = my_img_rnd_contrast.eval()
+                        # image = my_img_rnd_brightness_2.eval()
                         # resized_image = np.asarray(image)
                         # resized_image = resized_image / 255.
                         # image_list.append(resized_image)
                         # label_hot.append(label)
 
-                        # random hue
+                        # random contrast
+                        image = my_img_rnd_contrast.eval()
+                        resized_image = np.asarray(image)
+                        resized_image = resized_image / 255.
+                        image_list.append(resized_image)
+                        label_hot.append(label)
+
+                        # # random hue
                         # image = my_img_rnd_hue.eval()
                         # resized_image = np.asarray(image)
                         # resized_image = resized_image / 255.
                         # image_list.append(resized_image)
                         # label_hot.append(label)
 
-                        # # random saturation
-                        # image = my_img_rnd_saturation.eval()
-                        # resized_image = np.asarray(image)
-                        # resized_image = resized_image / 255.
-                        # image_list.append(resized_image)
-                        # label_hot.append(label)
+                        # random saturation
+                        image = my_img_rot_2.eval()
+                        resized_image = np.asarray(image)
+                        resized_image = resized_image / 255.
+                        image_list.append(resized_image)
+                        label_hot.append(label)
 
                 coord.request_stop()
                 coord.join(threads)
