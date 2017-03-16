@@ -127,7 +127,7 @@ def load_image_new(jpg_dir, bin_dir, image_type, load_type, size, with_rot, forc
 
                 key, value = reader.read(filename_queue)
 
-                if image_type == 0:
+                if image_type == 0: 
                     channels = 1
                 else:
                     channels = 3
