@@ -14,15 +14,15 @@ import matplotlib.pyplot as plt
 import seaborn as sn
 import pandas as pd
 
-def load_all_image(image_type, load_type, size, with_rot, force_load=False):
+def load_all_image(image_type, load_type, size, with_rot, force_load=False, force_load_val=False):
     train_image, train_label = \
         load_image_new('FinalDataset/jpg_new/Train', 'FinalDataset/bin/Train', image_type, load_type, size, with_rot, force_load)
 
     validation_image, validation_label = \
-        load_image_new('FinalDataset/jpg_new/Validation', 'FinalDataset/bin/Validation', image_type, load_type, size, False, force_load)
+        load_image_new('FinalDataset/jpg_new/Validation', 'FinalDataset/bin/Validation', image_type, load_type, size, False, force_load_val)
 
     test_image, test_label = \
-        load_image_new('FinalDataset/jpg_new/Test', 'FinalDataset/bin/Test', image_type, load_type, size, False, force_load)
+        load_image_new('FinalDataset/jpg_new/Test', 'FinalDataset/bin/Test', image_type, load_type, size, False, force_load_val)
 
     return train_image,train_label,validation_image,validation_label,test_image,test_label
 
@@ -89,88 +89,90 @@ def load_image_new(jpg_dir, bin_dir, image_type, load_type, size, with_rot, forc
     label_hot = []
 
     dir_list = listdir(jpg_dir)
+    init_op = tf.initialize_all_variables()
 
-    # For every label
-    for i in range(0,len(dir_list)):
+    with tf.Session() as sess:
+        sess.run(init_op)
+        reader = tf.WholeFileReader()
+        # For every label
+        for i in range(0,len(dir_list)):
 
-        # Init label one hot vector
-        label = np.zeros(51)
-        label[int(dir_list[i])] = 1
+            # Init label one hot vector
+            label = np.zeros(51)
+            label[int(dir_list[i])] = 1
 
-        dir_images_list = listdir(jpg_dir + "/" + dir_list[i])
+            dir_images_list = listdir(jpg_dir + "/" + dir_list[i])
 
-        if load_type == 'CV':
-            # For every image
-            for j in range(0,len(dir_images_list)):
-                # Read image.
-                img = cv2.imread(jpg_dir + "/" + str(dir_list[i]) + '/' + str(dir_images_list[j]),image_type)
-                if (img is None):
-                    continue
+            if load_type == 'CV':
+                # For every image
+                for j in range(0,len(dir_images_list)):
+                    # Read image.
+                    img = cv2.imread(jpg_dir + "/" + str(dir_list[i]) + '/' + str(dir_images_list[j]),image_type)
+                    if (img is None):
+                        continue
 
-                # Resize image.
-                resized_image = cv2.resize(img, (size, size))
-                #resized_image = resized_image.flatten()
-                resized_image = resized_image / 255.
+                    # Resize image.
+                    resized_image = cv2.resize(img, (size, size))
+                    #resized_image = resized_image.flatten()
+                    resized_image = resized_image / 255.
 
-                image_list.append(resized_image)
-                label_hot.append(label)
-        else:
-            for j in range(0, len(dir_images_list)):
-                dir_images_list[j] = jpg_dir + "/" + str(dir_list[i]) + '/' + dir_images_list[j]
-
-            filename_queue = tf.train.string_input_producer(dir_images_list)  # list of files to read
-
-            reader = tf.WholeFileReader()
-            key, value = reader.read(filename_queue)
-
-            if image_type == 0:
-                channels = 1
+                    image_list.append(resized_image)
+                    label_hot.append(label)
             else:
-                channels = 3
+                for j in range(0, len(dir_images_list)):
+                    dir_images_list[j] = jpg_dir + "/" + str(dir_list[i]) + '/' + dir_images_list[j]
 
-            my_img = tf.image.decode_jpeg(value, channels=channels)  # use png or jpg decoder based on your files.
-            my_img_re = tf.image.resize_images(my_img, [size, size])
-
-
-            # ROTATIONAL MANIPULATIONS #
-
-            # # Rotate image left by 90 degrees
-            # my_img_rot_1 = tf.image.rot90(my_img_re, 1, name=None)
-            #
-            # Rotate image left by 180 degrees
-            my_img_rot_2 = tf.image.rot90(my_img_re, 2, name=None)
-            #
-            # # Rotate image left by 270 degrees
-            # my_img_rot_3 = tf.image.rot90(my_img_re, 3, name=None)
-            #
-            # # flip image upside down
-            # my_img_flip_vertically = tf.image.flip_up_down(my_img_re)
-            #
-            # flip image left right
-            my_img_flip_horizontally = tf.image.flip_left_right(my_img_re)
+                filename_queue = tf.train.string_input_producer(dir_images_list)  # list of files to read
 
 
+                key, value = reader.read(filename_queue)
 
-            # COLOR MANIPULATION #
+                if image_type == 0:
+                    channels = 1
+                else:
+                    channels = 3
 
-            # image with random brightness
-            my_img_rnd_brightness = tf.image.random_brightness(my_img_re, 1.0, seed=None)
 
-            # my_img_rnd_brightness_2 = tf.image.random_brightness(my_img_re, 1.0, seed=None)
+                my_img = tf.image.decode_jpeg(value, channels=channels)  # use png or jpg decoder based on your files.
+                my_img_re = tf.image.resize_images(my_img, [size, size])
 
-            # image with random contrast
-            my_img_rnd_contrast = tf.image.random_contrast(my_img_re, 0.1, 5.0, seed=None)
+                # ROTATIONAL MANIPULATIONS #
 
-            # # image with random hue
-            # my_img_rnd_hue = tf.image.random_hue(my_img_re, 0.5, seed=None)
-            #
-            # # image with random saturation
-            # my_img_rnd_saturation = tf.image.random_saturation(my_img_re, 0.1, 5.0, seed=None)
+                # # Rotate image left by 90 degrees
+                # my_img_rot_1 = tf.image.rot90(my_img_re, 1, name=None)
+                #
+                # Rotate image left by 180 degrees
+                my_img_rot_2 = tf.image.rot90(my_img_re, 2, name=None)
+                #
+                # # Rotate image left by 270 degrees
+                # my_img_rot_3 = tf.image.rot90(my_img_re, 3, name=None)
+                #
+                # # flip image upside down
+                # my_img_flip_vertically = tf.image.flip_up_down(my_img_re)
+                #
+                # flip image left right
+                my_img_flip_horizontally = tf.image.flip_left_right(my_img_re)
 
-            init_op = tf.initialize_all_variables()
 
-            with tf.Session() as sess:
-                sess.run(init_op)
+
+                # COLOR MANIPULATION #
+
+                # image with random brightness
+                my_img_rnd_brightness = tf.image.random_brightness(my_img_re, 1.0, seed=None)
+
+                my_img_rnd_brightness_2 = tf.image.random_brightness(my_img_re, 1.0, seed=None)
+
+                # image with random contrast
+                my_img_rnd_contrast = tf.image.random_contrast(my_img_re, 0.1, 4.0, seed=None)
+                my_img_rnd_contrast2 = tf.image.random_contrast(my_img_re, 0.1, 4.0, seed=None)
+
+                # # image with random hue
+                # my_img_rnd_hue = tf.image.random_hue(my_img_re, 0.5, seed=None)
+                #
+                # # image with random saturation
+                # my_img_rnd_saturation = tf.image.random_saturation(my_img_re, 0.1, 5.0, seed=None)
+
+
 
                 # Start populating the filename queue.
                 coord = tf.train.Coordinator()
@@ -179,7 +181,10 @@ def load_image_new(jpg_dir, bin_dir, image_type, load_type, size, with_rot, forc
                 for m in range(0, len(dir_images_list)):  # length of your filename list
                     # print(str(i) + "," + file_list[m])
                     image = my_img_re.eval()  # here is your image Tensor :)
+
                     resized_image = np.asarray(image)
+                    plt.imshow(np.resize(resized_image.flatten(), [40,40]))
+
                     # resized_image = resized_image.transpose(2,0,1).reshape(3,-1)
                     # resized_image = resized_image.transpose(1,0)
                     # resized_image = resized_image.squeeze()
@@ -227,21 +232,29 @@ def load_image_new(jpg_dir, bin_dir, image_type, load_type, size, with_rot, forc
                         # elif m % 2 == 1:
 
                         # the first random brightness
-                        image = my_img_rnd_brightness.eval()
+                        # image = my_img_rnd_brightness.eval()
+                        image = sess.run(my_img_rnd_brightness)
                         resized_image = np.asarray(image)
                         resized_image = resized_image / 255.
                         image_list.append(resized_image)
                         label_hot.append(label)
 
                         # the second random brightness
-                        # image = my_img_rnd_brightness_2.eval()
-                        # resized_image = np.asarray(image)
-                        # resized_image = resized_image / 255.
-                        # image_list.append(resized_image)
-                        # label_hot.append(label)
+                        image = my_img_rnd_brightness_2.eval()
+                        resized_image = np.asarray(image)
+                        resized_image = resized_image / 255.
+                        image_list.append(resized_image)
+                        label_hot.append(label)
 
                         # random contrast
                         image = my_img_rnd_contrast.eval()
+                        resized_image = np.asarray(image)
+                        resized_image = resized_image / 255.
+                        image_list.append(resized_image)
+                        label_hot.append(label)
+
+                        # the second random contrast
+                        image = my_img_rnd_contrast2.eval()
                         resized_image = np.asarray(image)
                         resized_image = resized_image / 255.
                         image_list.append(resized_image)
@@ -255,26 +268,26 @@ def load_image_new(jpg_dir, bin_dir, image_type, load_type, size, with_rot, forc
                         # label_hot.append(label)
 
                         # random saturation
-                        image = my_img_rot_2.eval()
-                        resized_image = np.asarray(image)
-                        resized_image = resized_image / 255.
-                        image_list.append(resized_image)
-                        label_hot.append(label)
+                        # image = my_img_rot_2.eval()
+                        # resized_image = np.asarray(image)
+                        # resized_image = resized_image / 255.
+                        # image_list.append(resized_image)
+                        # label_hot.append(label)
 
-                coord.request_stop()
-                coord.join(threads)
+    coord.request_stop()
+    # coord.join(threads)
 
-        # Shuffle data.
-        #random.shuffle(image_list)
+            # Shuffle data.
+            #random.shuffle(image_list)
 
-        # # Calc size of each group(train-validation-test)
-        # image_number = len(image_list)
-        # test_image_size = int(math.ceil(image_number * 0.73))
-        # validation_image_size = int(math.ceil(image_number * 0.82))
+            # # Calc size of each group(train-validation-test)
+            # image_number = len(image_list)
+            # test_image_size = int(math.ceil(image_number * 0.73))
+            # validation_image_size = int(math.ceil(image_number * 0.82))
 
-        # Split current label image to train-validation-test
-        # final_image.extend(image_list[:test_image_size])
-        # final_label.extend(label_hot[:test_image_size])
+            # Split current label image to train-validation-test
+            # final_image.extend(image_list[:test_image_size])
+            # final_label.extend(label_hot[:test_image_size])
 
     # list to numpy array.
     final_image = np.array(image_list)
