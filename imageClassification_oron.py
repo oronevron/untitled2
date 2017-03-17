@@ -102,6 +102,7 @@ saver.restore(sess, "FinalDataset/Model/Model_Oron_1/Model")
 dir_images_list = listdir('FinalDataset/test_jpg')
 
 hits_num = 0
+images_num = 0
 
 # For every label
 for i in range(0, len(dir_images_list)):
@@ -156,8 +157,9 @@ for i in range(0, len(dir_images_list)):
         hits_num = hits_num + 1
     else:
         result = "error"
+    images_num = images_num + 1
 
     print("image {} is {} - {}".format(dir_images_list[i][22:], labels[0], result))
 
-accuracy_percent = hits_num * 100.0 / len(dir_images_list)
-print("{} hits of {} images - {}% of accuracy".format(hits_num, len(dir_images_list), accuracy_percent))
+accuracy_percent = hits_num * 100.0 / images_num
+print("{} hits of {} images - {}% of accuracy".format(hits_num, images_num, accuracy_percent))
