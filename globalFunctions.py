@@ -738,6 +738,25 @@ def confusion_matrix1(actual, prediction, file_name):
     cm_plot = sn.heatmap(df_cm, annot=True, annot_kws={"size": 12}, linewidths=.5, ax=ax)  # font size
     fig = cm_plot.get_figure()
     fig.savefig('cm/' + str(file_name) + '.png')
+    plt.clf()
+
+def accuracy_per_epoch_validation(loss_list_validation, file_name):
+    plt.plot(loss_list_validation, color='m')
+    plt.title('CNN Accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epochs')
+    plt.savefig('cm/' + str(file_name) + '.png')
+    plt.clf()
+
+def accuracy_per_epoch_train_and_validation(loss_list_train, loss_list_validation, file_name):
+    plt.plot(loss_list_train)
+    plt.plot(loss_list_validation)
+    plt.title('CNN Accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='upper left')
+    plt.savefig('cm/' + str(file_name) + '.png')
+    plt.clf()
 
 def Restore_and_run_test(model_name):
     a = 1
