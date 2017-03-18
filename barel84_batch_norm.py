@@ -71,6 +71,7 @@ h_conv3_flat = tf.reshape(h_pool3, [-1, 5 * 5 * n_filters_3])
 
 
 # %% Create the one fully-connected layer:
+# with batch normalization
 n_fc = 1200
 W_fc1 = globalFunctions.weight_variable([5 * 5 * n_filters_3, n_fc])
 b_fc1 = globalFunctions.bias_variable([n_fc])
